@@ -2,9 +2,9 @@
   "name": "img-bot",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
     "build": "tsc && npm run minify",
-    "minify": "terser dist/index.js --compress --mangle --output dist/index.min.js"
+    "minify": "terser dist/index.js --compress --mangle --output dist/index.min.js",
+    "start": "node --experimental-modules dist/index.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.11.4",
