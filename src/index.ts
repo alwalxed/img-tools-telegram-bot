@@ -1,9 +1,8 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import TelegramBot, { Message, CallbackQuery } from "node-telegram-bot-api";
-import dotenv from "dotenv";
+import * as dotenv from "dotenv";
 import sharp from "sharp";
-import fetch from "node-fetch";
 import { arabicLanguage, supportedFormats } from "./constants";
 
 dotenv.config();

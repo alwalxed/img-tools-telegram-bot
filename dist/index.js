@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -6,11 +29,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const node_server_1 = require("@hono/node-server");
 const hono_1 = require("hono");
 const node_telegram_bot_api_1 = __importDefault(require("node-telegram-bot-api"));
-const dotenv_1 = __importDefault(require("dotenv"));
+const dotenv = __importStar(require("dotenv"));
 const sharp_1 = __importDefault(require("sharp"));
-const node_fetch_1 = __importDefault(require("node-fetch"));
 const constants_1 = require("./constants");
-dotenv_1.default.config();
+dotenv.config();
 const port = 3000;
 const token = process.env.TOKEN;
 const app = new hono_1.Hono();
@@ -51,7 +73,7 @@ bot.on("photo", async (msg) => {
     const fileId = (_b = (_a = msg.photo) === null || _a === void 0 ? void 0 : _a[msg.photo.length - 1]) === null || _b === void 0 ? void 0 : _b.file_id;
     try {
         const fileLink = await bot.getFileLink(fileId);
-        const response = await (0, node_fetch_1.default)(fileLink);
+        const response = await fetch(fileLink);
         if (!response.ok) {
             throw new Error(`Failed to fetch image (${response.status} ${response.statusText})`);
         }
