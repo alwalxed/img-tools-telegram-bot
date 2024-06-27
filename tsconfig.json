@@ -1,14 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "target": "ES2018", // Ensure compatibility with Node.js LTS versions
+    "module": "commonjs", // Output CommonJS modules for Node.js
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": [
-      "node"
-    ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx",
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node", // Use Node.js style module resolution
+    "types": ["node"],
+    "jsx": "react-jsx", // If using JSX, ensure proper configuration
+    "jsxImportSource": "hono/jsx", // Example JSX import source
+    "outDir": "./dist", // Output directory for compiled JavaScript
+    "rootDir": "./src" // Source directory for TypeScript files
   }
 }
