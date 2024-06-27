@@ -13,7 +13,7 @@ const token: string = process.env.TOKEN as string;
 const app = new Hono();
 const bot = new TelegramBot(token, { polling: true });
 
-let chosenFormat: string | undefined = "";
+const userState: Map<number, { chosenFormat?: string }> = new Map();
 
 const sendFormatSelection = (chatId: number) => {
   bot.sendMessage(chatId, arabicLanguage.chooseFormat, {
@@ -28,7 +28,7 @@ const sendFormatSelection = (chatId: number) => {
 bot.on("text", (msg: Message) => {
   const chatId: number = msg.chat.id;
   sendFormatSelection(chatId);
-  chosenFormat = "";
+  userState.set(chatId, {});
 });
 
 bot.onText(/\/help/, (msg: Message) => {
@@ -38,16 +38,22 @@ bot.onText(/\/help/, (msg: Message) => {
 
 bot.on("callback_query", (callbackQuery: CallbackQuery) => {
   const msg: Message = callbackQuery.message as Message;
-  chosenFormat = callbackQuery.data;
+  const chatId: number = msg.chat.id;
+  const chosenFormat = callbackQuery.data;
+
+  userState.set(chatId, { chosenFormat });
+
   bot.sendMessage(
-    msg.chat.id,
+    chatId,
     `اخترت ${chosenFormat?.toUpperCase()} ✅\nارسل الصورة 📷`
   );
 });
 
 bot.on("photo", async (msg: Message) => {
   const chatId: number = msg.chat.id;
-  if (!chosenFormat) {
+  const user = userState.get(chatId);
+
+  if (!user || !user.chosenFormat) {
     bot.sendMessage(chatId, "الرجاء اختيار الصيغة أولا ❗️");
     sendFormatSelection(chatId);
     return;
@@ -55,7 +61,7 @@ bot.on("photo", async (msg: Message) => {
 
   bot.sendMessage(
     chatId,
-    `نعمل على تغيير صورتك إلى ${chosenFormat.toUpperCase()} \n انتظر قليلا ⏳`
+    `نعمل على تغيير صورتك إلى ${user.chosenFormat.toUpperCase()} \n انتظر قليلا ⏳`
   );
 
   const fileId: string = msg.photo?.[msg.photo.length - 1]?.file_id as string;
@@ -64,12 +70,12 @@ bot.on("photo", async (msg: Message) => {
     const response = await fetch(fileLink);
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch image (${response.status} ${response.statusText})`
+        `فشل في جلب الصورة (${response.status} ${response.statusText})`
       );
     }
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const format = chosenFormat as keyof sharp.FormatEnum;
+    const format = user.chosenFormat as keyof sharp.FormatEnum;
 
     const convertedBuffer = await sharp(buffer)
       .toFormat(format, { quality: 100, compressionLevel: 0 })
@@ -78,16 +84,15 @@ bot.on("photo", async (msg: Message) => {
     bot.sendDocument(chatId, convertedBuffer);
     bot.sendMessage(
       chatId,
-      `تفضل صورتك بصيغة ${chosenFormat.toUpperCase()} 🖼️\nلو احتجت شيئا آخر فأرسل نقطة\nللتواصل: x.com/alwalxed`
+      `تفضل صورتك بصيغة ${user.chosenFormat.toUpperCase()} 🖼️\nلو احتجت شيئا آخر فأرسل نقطة\nللتواصل: x.com/alwalxed`
     );
-    // Reset chosen format
-    chosenFormat = "";
+    userState.set(chatId, {});
   } catch (error) {
     bot.sendMessage(
       chatId,
-      "An error occurred while converting your image. Please try again."
+      "حدث خطأ أثناء تحويل صورتك. الرجاء المحاولة مرة أخرى."
     );
-    console.error("Error converting image:", error);
+    console.error("خطأ في تحويل الصورة:", error);
   }
 });
 
@@ -96,4 +101,4 @@ serve({
   port,
 });
 
-console.log(`Server is running on port ${port}`);
+console.log(`الخادم يعمل على المنفذ ${port}`);
