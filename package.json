@@ -1,0 +1,19 @@
+{
+  "name": "img-bot",
+  "scripts": {
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.11.4",
+    "dotenv": "^16.4.5",
+    "hono": "^4.4.9",
+    "node-fetch": "^3.3.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "sharp": "^0.33.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "@types/node-telegram-bot-api": "^0.64.7",
+    "tsx": "^4.7.1"
+  }
+}
