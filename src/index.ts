@@ -72,7 +72,7 @@ bot.on("photo", async (msg: Message) => {
     const format = chosenFormat as keyof sharp.FormatEnum;
 
     const convertedBuffer = await sharp(buffer)
-      .toFormat(format, { quality: 100 })
+      .toFormat(format, { quality: 100, compressionLevel: 0 })
       .toBuffer();
 
     bot.sendDocument(chatId, convertedBuffer);
