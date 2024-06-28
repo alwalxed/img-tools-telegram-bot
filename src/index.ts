@@ -18,34 +18,30 @@ const userState: Map<number, { chosenFormat?: string }> = new Map();
 const sendFormatSelection = (chatId: number) => {
   bot.sendMessage(chatId, arabicLanguage.chooseFormat, {
     reply_markup: {
-      inline_keyboard: supportedFormats.map((format) => [
-        { text: format.toUpperCase(), callback_data: format },
+      keyboard: supportedFormats.map((format) => [
+        { text: format.toUpperCase() },
       ]),
+      resize_keyboard: true,
     },
   });
 };
 
-bot.on("text", (msg: Message) => {
+bot.onText(/\/start/, (msg: Message) => {
   const chatId: number = msg.chat.id;
   sendFormatSelection(chatId);
   userState.set(chatId, {});
 });
 
-bot.onText(/\/help/, (msg: Message) => {
+bot.onText(/\b(jpeg|webp|png)\b/i, async (msg: Message) => {
   const chatId: number = msg.chat.id;
-  bot.sendMessage(chatId, arabicLanguage.help);
-});
-
-bot.on("callback_query", (callbackQuery: CallbackQuery) => {
-  const msg: Message = callbackQuery.message as Message;
-  const chatId: number = msg.chat.id;
-  const chosenFormat = callbackQuery.data;
+  const chosenFormat = msg.text;
 
   userState.set(chatId, { chosenFormat });
 
-  bot.sendMessage(
+  await bot.sendMessage(
     chatId,
-    `اخترت ${chosenFormat?.toUpperCase()} ✅\nارسل الصورة 📷`
+    `اخترت ${chosenFormat?.toUpperCase()} ✅\nارسل الصورة 📷`,
+    { reply_markup: { remove_keyboard: true } }
   );
 });
 
@@ -59,7 +55,7 @@ bot.on("photo", async (msg: Message) => {
     return;
   }
 
-  bot.sendMessage(
+  await bot.sendMessage(
     chatId,
     `نعمل على تغيير صورتك إلى ${user.chosenFormat.toUpperCase()} \n انتظر قليلا ⏳`
   );
@@ -81,14 +77,20 @@ bot.on("photo", async (msg: Message) => {
       .toFormat(format, { quality: 100, compressionLevel: 0 })
       .toBuffer();
 
-    bot.sendDocument(chatId, convertedBuffer);
-    bot.sendMessage(
-      chatId,
-      `تفضل صورتك بصيغة ${user.chosenFormat.toUpperCase()} 🖼️\nلو احتجت شيئا آخر فأرسل نقطة\nللتواصل: x.com/alwalxed`
-    );
+    await bot.sendDocument(chatId, convertedBuffer, {
+      caption: "x.com/alwalxed",
+    });
+    bot.sendMessage(chatId, arabicLanguage.chooseFormat, {
+      reply_markup: {
+        keyboard: supportedFormats.map((format) => [
+          { text: format.toUpperCase() },
+        ]),
+        resize_keyboard: true,
+      },
+    });
     userState.set(chatId, {});
   } catch (error) {
-    bot.sendMessage(
+    await bot.sendMessage(
       chatId,
       "حدث خطأ أثناء تحويل صورتك. الرجاء المحاولة مرة أخرى."
     );
