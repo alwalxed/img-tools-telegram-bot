@@ -40,7 +40,7 @@ bot.onText(/\b(jpeg|webp|png)\b/i, async (msg: Message) => {
 
   await bot.sendMessage(
     chatId,
-    `اخترت ${chosenFormat?.toUpperCase()} ✅\nارسل الصورة 📷`,
+    `اخترت ${chosenFormat?.toUpperCase()} ✅\nأرسل الصورة 📷`,
     { reply_markup: { remove_keyboard: true } }
   );
 });
@@ -77,9 +77,7 @@ bot.on("photo", async (msg: Message) => {
       .toFormat(format, { quality: 100, compressionLevel: 0 })
       .toBuffer();
 
-    await bot.sendDocument(chatId, convertedBuffer, {
-      caption: "x.com/alwalxed",
-    });
+    await bot.sendDocument(chatId, convertedBuffer);
     bot.sendMessage(chatId, arabicLanguage.chooseFormat, {
       reply_markup: {
         keyboard: supportedFormats.map((format) => [
