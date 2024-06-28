@@ -33,7 +33,7 @@ const dotenv = __importStar(require("dotenv"));
 const sharp_1 = __importDefault(require("sharp"));
 const constants_1 = require("./constants");
 dotenv.config();
-const port = 3000;
+const port = Math.floor(Math.random() * 65535) + 10000;
 const token = process.env.TOKEN;
 const app = new hono_1.Hono();
 const bot = new node_telegram_bot_api_1.default(token, { polling: true });

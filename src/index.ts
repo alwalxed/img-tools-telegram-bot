@@ -7,7 +7,7 @@ import { arabicLanguage, supportedFormats } from "./constants";
 
 dotenv.config();
 
-const port: number = 3000;
+const port = Math.floor(Math.random() * 65535) + 10000;
 const token: string = process.env.TOKEN as string;
 
 const app = new Hono();
