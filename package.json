@@ -14,9 +14,9 @@
     "sharp": "^0.33.4"
   },
   "devDependencies": {
-    "@types/node": "^20.11.17",
+    "@types/node": "^20.14.9",
     "@types/node-telegram-bot-api": "^0.64.7",
-    "terser": "^5.13.2",
-    "tsx": "^4.7.1"
+    "terser": "^5.31.1",
+    "tsx": "^4.16.0"
   }
 }
