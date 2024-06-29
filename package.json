@@ -11,7 +11,8 @@
     "dotenv": "^16.4.5",
     "hono": "^4.4.9",
     "node-telegram-bot-api": "^0.66.0",
-    "sharp": "^0.33.4"
+    "sharp": "^0.33.4",
+    "winston": "^3.13.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",

@@ -10,7 +10,9 @@
 
 # deps
 node_modules/
-
+dist
+server.log
+last_update_id.txt
 # env
 .env
 .env.production
