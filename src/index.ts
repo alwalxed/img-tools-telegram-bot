@@ -1,98 +1,114 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import TelegramBot from "node-telegram-bot-api";
-import { log } from "./utils/log";
-import { getToken } from "./utils/get-token";
-import { saveLastUpdateId } from "./utils/last-updated";
-import { handleStartCommand } from "./handlers/handle-start-command";
-import { FORMATS, port } from "./consts";
+import TelegramBot, { Message } from "node-telegram-bot-api";
+import { _get_token } from "./utils/get-token";
+import { __log__ } from "./utils/log";
+import { startCommandHandler } from "./helpers/start-command";
+import { convertHandler } from "./helpers/convert";
+import { compressHandler } from "./helpers/compress";
 import { AllowedFormat } from "./types";
-import { handleFormatSelection } from "./handlers/handle-format-selection";
-import { handlePhotoUpload } from "./handlers/handle-photo-upload";
+import { FORMATS, port, userState } from "./consts";
+import { send_convert_format_selection } from "./helpers/format";
+import { _save_last_update_id } from "./utils/last-updated";
+import { get_message_info } from "./utils/get-msg-info";
 
 const app = new Hono();
-const bot = new TelegramBot(getToken(), { polling: true, filepath: false });
+const bot = new TelegramBot(_get_token(), { polling: true, filepath: false });
 
-app.get("/", (c) => c.text("OK"));
-
+// Handle incoming messages
 bot.on("message", async (msg) => {
   try {
-    const chatId = msg.chat.id;
+    __log__("Received message", get_message_info(msg));
 
-    log("Received message", { chat_id: chatId });
-
-    //*** HANDLERS ***
-    // Handle (start) command
     if (msg.text?.startsWith("/start")) {
       await handleStartCommand(bot, msg);
-    }
-
-    // Handle format selection
-    else if (FORMATS.includes(msg.text?.toLowerCase() as AllowedFormat)) {
+    } else if (msg.text?.startsWith("compress")) {
+      await handleCompressCommand(bot, msg);
+    } else if (msg.text?.startsWith("convert")) {
+      await handleConvertCommand(bot, msg);
+    } else if (FORMATS.includes(msg.text?.toLowerCase() as AllowedFormat)) {
       await handleFormatSelection(bot, msg);
+    } else if (msg.photo) {
+      await handlePhoto(bot, msg);
+    } else {
+      await handleUnsupportedMessage(bot, msg);
     }
 
-    // Handle photo upload (only jpg, png, or webp)
-    else if (msg.photo) {
-      const fileId = msg.photo[msg.photo.length - 1].file_id;
-      const file = await bot.getFile(fileId);
-      const filePath = file.file_path;
-      const fileType = filePath?.split(".").pop();
-
-      log("Received photo type", { chat_id: chatId, file_type: fileType });
-
-      if (fileType === "jpg" || fileType === "png" || fileType === "webp") {
-        await handlePhotoUpload(bot, msg);
-      } else {
-        await bot.sendMessage(
-          chatId,
-          `Warning: Unsupported photo type. Please send a photo in jpg, png, or webp format.`
-        );
-        log("Warning: Unsupported photo type received", {
-          chat_id: chatId,
-          file_type: fileType,
-        });
-      }
-    }
-
-    // Handle unsupported message types
-    else {
-      await bot.sendMessage(
-        chatId,
-        "Warning: Unsupported message type. Please send a photo or a text message."
-      );
-      log("Warning: Unsupported message type received", {
-        chat_id: chatId,
-        message_type: msg.text,
-      });
-    }
-
-    //*** END HANDLERS ***
-
-    // Save last update ID
-    saveLastUpdateId(msg.message_id);
+    _save_last_update_id(msg.message_id);
   } catch (error) {
     console.error("Error handling message:", error);
-    log("Error handling message", { chat_id: msg.chat.id, error });
+    __log__("Error handling message", { chat_id: msg.chat.id, error });
   }
 });
 
-// *** ERROR HANDLERS ***
+// Handle /start command
+async function handleStartCommand(bot: TelegramBot, msg: Message) {
+  userState.set(msg.chat.id, {});
+  await startCommandHandler(bot, msg);
+}
+
+// Handle compress command
+async function handleCompressCommand(bot: TelegramBot, msg: Message) {
+  userState.set(msg.chat.id, { chosenOperation: "compress" });
+  await bot.sendMessage(msg.chat.id, "Send the picture", {
+    reply_markup: { remove_keyboard: true },
+  });
+}
+
+// Handle convert command
+async function handleConvertCommand(bot: TelegramBot, msg: Message) {
+  userState.set(msg.chat.id, { chosenOperation: "convert" });
+  await send_convert_format_selection(bot, msg.chat.id);
+}
+
+// Handle format selection
+async function handleFormatSelection(bot: TelegramBot, msg: Message) {
+  const chatId = msg.chat.id;
+  userState.set(chatId, {
+    chosenFormat: msg.text?.toLowerCase() as AllowedFormat,
+    chosenOperation: "convert",
+  });
+  await bot.sendMessage(chatId, `Send the picture`, {
+    reply_markup: { remove_keyboard: true },
+  });
+}
+
+// Handle photo message
+async function handlePhoto(bot: TelegramBot, msg: Message) {
+  const chatId = msg.chat.id;
+  switch (userState.get(chatId)?.chosenOperation) {
+    case "compress":
+      await compressHandler(bot, msg);
+      break;
+    case "convert":
+      await convertHandler(bot, msg);
+      break;
+  }
+}
+
+// Handle unsupported message types
+async function handleUnsupportedMessage(bot: TelegramBot, msg: Message) {
+  userState.set(msg.chat.id, {});
+  await bot.sendMessage(msg.chat.id, "Bad request, /start again");
+  __log__("Warning: Unsupported message type received", {
+    chat_id: msg.chat.id,
+    message_type: msg.text,
+  });
+}
+
 // Handle polling errors
 bot.on("polling_error", (error) => {
-  console.log({ error });
-  log("Polling error", { error });
+  console.error("Polling error:", error);
+  __log__("Polling error", { error });
 });
 
 // Handle webhook errors
 bot.on("webhook_error", (error) => {
-  console.log({ error });
-  log("Webhook error", { error });
+  console.error("Webhook error:", error);
+  __log__("Webhook error", { error });
 });
-//*** END ERROR HANDLERS ***
 
+// Start serving the bot
 serve({ fetch: app.fetch, port: port });
-
 console.log(`Server is running on port ${port}`);
-
-log("Server started", { port });
+__log__("Server started", { port });

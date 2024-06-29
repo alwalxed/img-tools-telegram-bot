@@ -1,17 +1,8 @@
 import fs from "fs";
-import { log } from "./log";
 import { lastUpdateIdFile } from "../consts";
+import { __log__ } from "./log";
 
-export const saveLastUpdateId = (updateId: number) => {
+export const _save_last_update_id = (updateId: number) => {
   fs.writeFileSync(lastUpdateIdFile, updateId.toString());
-  log("Saved last update ID", { update_id: updateId });
-};
-
-export const loadLastUpdateId = (): number => {
-  if (fs.existsSync(lastUpdateIdFile)) {
-    const updateId = parseInt(fs.readFileSync(lastUpdateIdFile).toString(), 10);
-    log("Loaded last update ID", { update_id: updateId });
-    return updateId;
-  }
-  return 0;
+  __log__("Saved last update ID", { update_id: updateId });
 };

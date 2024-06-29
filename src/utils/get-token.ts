@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 
-export function getToken(): string {
+export function _get_token(): string {
   dotenv.config();
   const token: string = process.env.TOKEN as string;
 
