@@ -15,6 +15,10 @@ import { get_message_info } from "./utils/get-msg-info";
 const app = new Hono();
 const bot = new TelegramBot(_get_token(), { polling: true, filepath: false });
 
+app.get("/health", (c) => {
+  return c.text("OK");
+});
+
 // Handle incoming messages
 bot.on("message", async (msg) => {
   try {
