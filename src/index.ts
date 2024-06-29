@@ -16,6 +16,8 @@ const bot = new TelegramBot(getToken(), { polling: true, filepath: false });
 let lastUpdateId: number = 0;
 lastUpdateId = loadLastUpdateId();
 
+app.get("/", (c) => c.text("OK"));
+
 bot.on("message", async (msg) => {
   try {
     const chatId = msg.chat.id;
