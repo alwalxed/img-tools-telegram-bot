@@ -7,7 +7,7 @@ export async function retryWithExponentialBackoff(bot: TelegramBot) {
   while (true) {
     try {
       await new Promise((resolve) => setTimeout(resolve, delay));
-
+      bot.stopPolling();
       await bot.startPolling();
       logger("info", "retryWithExponentialBackoff", undefined, { delay });
       break;

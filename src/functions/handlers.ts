@@ -6,14 +6,14 @@ import {
   availableOperations,
   supportedFormats,
   levelsOfCompression,
+  userState,
 } from "../constants";
 import { logger } from "./logger";
 import { CompressionLevel, Format, Operation, UserState } from "../types";
 
 export const onMessageHandler = async (
   bot: TelegramBot,
-  msg: Message,
-  userState: Map<number, UserState>
+  msg: Message
 ): Promise<void> => {
   const { chatId, fullName, userId, username } = extractSenderInfo(msg);
   const currentState = userState.get(chatId) || { step: "startCommand" };
@@ -225,6 +225,8 @@ const handlePhotoProcessing = async (
   try {
     const file = await bot.getFile(fileId);
     const fileLink = await bot.getFileLink(fileId);
+
+    // Fetch the file from Telegram server
     const response = await fetch(fileLink);
 
     if (!response.ok) {
@@ -233,6 +235,11 @@ const handlePhotoProcessing = async (
       );
     }
 
+    // Convert ArrayBuffer to Buffer
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Determine file type
     const filePath = file.file_path as string;
     const fileType = filePath.split(".").pop()?.toLowerCase() as Format;
 
@@ -240,29 +247,26 @@ const handlePhotoProcessing = async (
       throw new Error("Unsupported or corrupted file");
     }
 
-    const arrayBuffer = await response.arrayBuffer();
-    const originalSize = arrayBuffer.byteLength;
-
     let processedBuffer: Buffer;
     let caption: string;
 
     if (operation === "compression") {
       processedBuffer = await compress(
-        arrayBuffer,
+        buffer,
         fileType,
         userState.get(chatId)?.chosenLevel as CompressionLevel
       );
       const newSize = processedBuffer.byteLength;
       const reductionPercent = (
-        ((originalSize - newSize) / originalSize) *
+        ((buffer.byteLength - newSize) / buffer.byteLength) *
         100
       ).toFixed(2);
-      caption = `${(originalSize / 1024).toFixed(2)}KB → ${(
+      caption = `${(buffer.byteLength / 1024).toFixed(2)}KB → ${(
         newSize / 1024
       ).toFixed(2)}KB → ${reductionPercent}%`;
     } else {
       const chosenFormat = userState.get(chatId)?.chosenFormat as Format;
-      processedBuffer = await convert(arrayBuffer, fileType);
+      processedBuffer = await convert(buffer, fileType);
       caption = `${fileType.toUpperCase()} → ${chosenFormat.toUpperCase()}`;
     }
 
