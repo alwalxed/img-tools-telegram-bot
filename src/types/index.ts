@@ -1,9 +1,22 @@
-import sharp from "sharp";
-import { FORMATS, OPERATIONS } from "../consts";
+import {
+  availableOperations,
+  levelsOfCompression,
+  supportedFormats,
+} from "../constants";
 
-export type AllowedFormat = (typeof FORMATS)[number];
-type AllowedOperation = (typeof OPERATIONS)[number];
+export type CompressionLevel = (typeof levelsOfCompression)[number];
+export type Format = (typeof supportedFormats)[number];
+export type Operation = (typeof availableOperations)[number];
+
 export type UserState = {
-  chosenOperation?: AllowedOperation;
-  chosenFormat?: keyof sharp.FormatEnum;
+  step:
+    | "startCommand"
+    | "operationSelection"
+    | "conversionFormatSelection"
+    | "compressionLevelSelection"
+    | "conversion"
+    | "compression"
+    | "successfulOperation";
+  chosenFormat?: Format;
+  chosenLevel?: CompressionLevel;
 };
