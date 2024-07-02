@@ -1,4 +1,4 @@
-import { envGetValue } from "../functions/env";
+import { envGetValue } from "../utils/env";
 import { UserState } from "../types";
 
 export const PORT = parseInt(envGetValue("port"));

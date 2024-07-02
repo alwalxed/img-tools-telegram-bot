@@ -2,8 +2,8 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import TelegramBot from "node-telegram-bot-api";
 import { TOKEN, PORT } from "./constants";
-import { logger } from "./functions/logger";
-import { onMessageHandler } from "./functions/handlers";
+import { logger } from "./utils/logger";
+import { onMessageHandler } from "./handlers";
 
 const app = new Hono();
 const bot = new TelegramBot(TOKEN, { polling: true, filepath: false });
